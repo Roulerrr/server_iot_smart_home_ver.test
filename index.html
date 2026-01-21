@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Auth Test UI</title>
+  <style>
+    body { font-family: sans-serif; padding: 30px; background: #f9f9f9; }
+    input, button { padding: 8px; margin: 5px; width: 250px; }
+    button { cursor: pointer; }
+    .box { border: 1px solid #ccc; padding: 20px; margin: 20px 0; background: #fff; width: fit-content; }
+  </style>
+</head>
+<body>
+
+  <h2>🔐 Auth Test Interface</h2>
+
+  <div class="box">
+    <h3>📝 Register</h3>
+    <input id="reg_email" placeholder="Email"><br>
+    <input id="reg_password" type="password" placeholder="Password"><br>
+    <button onclick="register()">Register</button>
+  </div>
+
+  <div class="box">
+    <h3>🔑 Login</h3>
+    <input id="log_email" placeholder="Email"><br>
+    <input id="log_password" type="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="box">
+    <h3>👤 Profile</h3>
+    <button onclick="getProfile()">View Profile</button>
+  </div>
+
+  <div class="box">
+    <h3>🚪 Logout</h3>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <pre id="output" style="background:#eee; padding:10px;"></pre>
+
+  <script>
+    const API_BASE = "http://localhost:3000";
+
+    function showOutput(obj) {
+      document.getElementById("output").textContent = JSON.stringify(obj, null, 2);
+    }
+
+    async function register() {
+      const res = await fetch(`${API_BASE}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: document.getElementById("reg_email").value,
+          password: document.getElementById("reg_password").value,
+        }),
+      });
+      const data = await res.json();
+      showOutput(data);
+    }
+
+    async function login() {
+      const res = await fetch(`${API_BASE}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: document.getElementById("log_email").value,
+          password: document.getElementById("log_password").value,
+        }),
+      });
+      const data = await res.json();
+      showOutput(data);
+      if (data.accessToken) {
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
+    }
+
+    async function getProfile() {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`${API_BASE}/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      showOutput(data);
+    }
+
+    async function logout() {
+      const res = await fetch(`${API_BASE}/logout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          refreshToken: localStorage.getItem("refreshToken"),
+        }),
+      });
+      const data = await res.json();
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      showOutput(data);
+    }
+  </script>
+</body>
+</html>
